@@ -10,10 +10,15 @@
     justify-content: space-between;
     height: var(--horizontal-nav-bar-size);
     padding-right: 1rem;
-    background-color: transparent;
+    background: linear-gradient(to bottom, rgba(8, 8, 8, 0.8) 0%, rgba(8, 8, 8, 0.4) 60%, transparent 100%);
     overflow: visible;
     padding-top: var(--safe-area-inset-top);
     box-sizing: content-box;
+    transition: background-color 0.4s ease;
+
+    &.scrolled {
+        background: #080808;
+    }
 
     .logo-container {
         flex: none;
@@ -117,6 +122,21 @@
             &:hover {
                 .active();
             }
+        }
+    }
+
+    .menu-button-container {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background-color: var(--brand-red);
+        opacity: 1;
+
+        .icon {
+            width: 1.4rem;
+            height: 1.4rem;
+            color: #fff;
+            opacity: 1;
         }
     }
 }

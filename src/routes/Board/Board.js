@@ -8,6 +8,7 @@ const { useStreamingServer, useNotifications, withCoreSuspender, getVisibleChild
 const { ContinueWatchingItem, EventModal, MainNavBars, MetaItem, MetaRow } = require('stremio/components');
 const useBoard = require('./useBoard');
 const useContinueWatchingPreview = require('./useContinueWatchingPreview');
+const BoardHero = require('./BoardHero');
 const styles = require('./styles');
 const { default: StreamingServerWarning } = require('./StreamingServerWarning');
 
@@ -45,11 +46,16 @@ const Board = () => {
     React.useLayoutEffect(() => {
         onVisibleRangeChange();
     }, [board.catalogs, onVisibleRangeChange]);
+    const heroItem = React.useMemo(() => {
+        const readyCatalog = board.catalogs.find((catalog) => catalog.content?.type === 'Ready');
+        return readyCatalog?.content?.content?.[0] ?? null;
+    }, [board.catalogs]);
     return (
         <div className={styles['board-container']}>
             <EventModal />
             <MainNavBars className={styles['board-content-container']} route={'board'}>
                 <div ref={scrollContainerRef} className={styles['board-content']} onScroll={onScroll}>
+                    <BoardHero item={heroItem} />
                     {
                         continueWatchingPreview.items.length > 0 ?
                             <MetaRow

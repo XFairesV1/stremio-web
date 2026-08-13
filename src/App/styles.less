@@ -50,6 +50,7 @@
     --horizontal-nav-bar-size: 5.5rem;
     --vertical-nav-bar-size: 6rem;
     --focus-outline-size: 2px;
+    --brand-red: #e50914;
     --color-facebook: #1877F1;
     --color-x: #000000;
     --color-reddit: #FF4500;
@@ -174,7 +175,9 @@ html {
     body {
         width: 100%;
         height: 100%;
-        background: linear-gradient(41deg, var(--primary-background-color) 0%, var(--secondary-background-color) 100%);
+        // Neutral black-to-near-black instead of the purple accent tone, so
+        // the initial paint (before the app mounts) doesn't flash purple.
+        background: linear-gradient(41deg, #050505 0%, #141414 100%);
         -webkit-font-smoothing: antialiased;
 
         :global(#app) {

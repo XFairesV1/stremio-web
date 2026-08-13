@@ -13,7 +13,7 @@ const NavMenu = require('./NavMenu');
 const styles = require('./styles');
 const { t } = require('i18next');
 
-const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, navMenu, originPath, hdrInfo, ...props }) => {
+const HorizontalNavBar = React.memo(({ className, route, query, title, backButton, searchBar, fullscreenButton, navMenu, originPath, hdrInfo, tabs, scrolled, ...props }) => {
     const navigate = useNavigate();
     const backButtonOnClick = React.useCallback(() => {
         if (originPath) {
@@ -31,7 +31,7 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
     ), []);
     useHorizontalNavGamepadNavigation(route || className, backButton);
     return (
-        <nav {...props} className={classnames(className, styles['horizontal-nav-bar-container'])}>
+        <nav {...props} className={classnames(className, styles['horizontal-nav-bar-container'], { [styles['scrolled']]: scrolled })}>
             {
                 backButton ?
                     <Button className={classnames(styles['button-container'], styles['back-button-container'])} tabIndex={-1} onClick={backButtonOnClick}>
@@ -46,6 +46,7 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
                         />
                     </div>
             }
+            {tabs}
             {
                 typeof title === 'string' && title.length > 0 ?
                     <h2 className={styles['title']}>{title}</h2>
@@ -97,6 +98,8 @@ HorizontalNavBar.propTypes = {
     searchBar: PropTypes.bool,
     fullscreenButton: PropTypes.bool,
     navMenu: PropTypes.bool,
+    tabs: PropTypes.node,
+    scrolled: PropTypes.bool,
     originPath: PropTypes.string,
     hdrInfo: PropTypes.shape({
         gamma: PropTypes.string,

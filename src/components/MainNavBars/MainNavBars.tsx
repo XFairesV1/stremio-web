@@ -24,30 +24,52 @@ type Props = {
 
 const MainNavBars = memo(({ className, route, query, children }: Props) => {
     const navRef = React.useRef(null);
-    const contentRef = React.useRef(null);
+    const contentRef = React.useRef<HTMLDivElement>(null);
+    const [scrolled, setScrolled] = React.useState(false);
 
     const navRoute = route === 'continue_watching' ? 'library' : (route ?? '');
     useContentGamepadNavigation(contentRef, navRoute);
     useVerticalNavGamepadNavigation(navRef, navRoute);
 
+    React.useEffect(() => {
+        const container = contentRef.current;
+        if (!container) {
+            return;
+        }
+
+        const onScroll = (event: Event) => {
+            const target = event.target as HTMLElement;
+            setScrolled(typeof target.scrollTop === 'number' && target.scrollTop > 10);
+        };
+
+        // Scroll events don't bubble, so listen in the capture phase to
+        // catch scrolling on whichever descendant element (e.g. the board's
+        // row container) is actually scrollable for the current route.
+        container.addEventListener('scroll', onScroll, true);
+        return () => container.removeEventListener('scroll', onScroll, true);
+    }, [route]);
+
     return (
         <div className={classnames(className, styles['main-nav-bars-container'])}>
             <HorizontalNavBar
                 className={styles['horizontal-nav-bar']}
+                scrolled={scrolled}
                 route={route}
                 query={query}
                 backButton={false}
                 searchBar={true}
                 fullscreenButton={true}
                 navMenu={true}
+                tabs={
+                    <VerticalNavBar
+                        ref={navRef}
+                        className={styles['vertical-nav-bar']}
+                        selected={route}
+                        tabs={TABS}
+                    />
+                }
             />
-            <VerticalNavBar
-                ref={navRef}
-                className={styles['vertical-nav-bar']}
-                selected={route}
-                tabs={TABS}
-            />
-            <div ref={contentRef} className={styles['nav-content-container']}>{children}</div>
+            <div ref={contentRef} className={classnames(styles['nav-content-container'], { [styles['no-nav-padding']]: route === 'board' })}>{children}</div>
         </div>
     );
 });

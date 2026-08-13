@@ -19,34 +19,48 @@
         z-index: 1;
     }
 
+    // On desktop the tab bar renders inline, as part of the horizontal nav
+    // bar's own flex row (logo | tabs | search | buttons), so it needs no
+    // positioning of its own here.
     .vertical-nav-bar {
-        position: absolute;
-        top: var(--horizontal-nav-bar-size);
-        bottom: 0;
-        left: 0;
-        z-index: 1;
+        flex: none;
     }
 
     .nav-content-container {
         position: absolute;
-        top: calc(var(--horizontal-nav-bar-size) + var(--safe-area-inset-top));
+        top: 0;
         right: 0;
         bottom: 0;
-        left: var(--vertical-nav-bar-size);
+        left: 0;
         z-index: 0;
         overflow: hidden;
+        // Routes push their own content below the nav bar via this padding.
+        // The board route removes it (.no-nav-padding) so its hero banner
+        // can start right at the top, under the (semi-transparent) nav —
+        // a child element can't escape a scrolling ancestor's clip via a
+        // negative margin, so the ancestor itself has to start at y:0.
+        padding-top: calc(var(--horizontal-nav-bar-size) + var(--safe-area-inset-top));
+
+        &.no-nav-padding {
+            padding-top: 0;
+        }
     }
 }
 
 @media only screen and (max-width: @minimum) {
     .main-nav-bars-container {
         .nav-content-container {
-            left: 0;
             bottom: var(--vertical-nav-bar-size);
         }
 
+        // On small screens there isn't room for the tabs inline, so they're
+        // pulled out of the horizontal bar's flow and pinned to the bottom.
         .vertical-nav-bar {
-            top: initial;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
         }
     }
 }

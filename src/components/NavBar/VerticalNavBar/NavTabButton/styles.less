@@ -3,80 +3,98 @@
 @import (reference) '~@stremio/stremio-colors/less/stremio-colors.less';
 @import (reference) '~stremio/common/screen-sizes.less';
 
+// Plain text nav links (Netflix-style top menu): icon hidden, label always
+// visible as a small, unboxed link — bold when selected, no hover pill.
 .nav-tab-button-container {
+    position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: transparent;
-    border-radius: 0.75rem;
-
-    @media (pointer: fine) {
-        &:hover {
-            background-color: var(--overlay-color);
-
-            .label {
-                opacity: 0.6;
-            }
-
-            &:global(.selected) {
-                .label {
-                    opacity: 1;
-                }
-            }
-        }
-    }
 
     &:global(.selected) {
-        .icon {
+        .label {
+            color: var(--primary-foreground-color);
+            font-weight: 700;
             opacity: 1;
         }
 
-        .icon, .label {
-            color: var(--primary-accent-color);
+        &::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -0.75rem;
+            height: 0.15rem;
+            background-color: var(--brand-red);
+            border-radius: 0.15rem;
+        }
+    }
+
+    @media (pointer: fine) {
+        &:hover {
+            .label {
+                opacity: 1;
+            }
         }
     }
 
     .icon, .logo {
-        flex: none;
-        width: 2.2rem;
-        height: 2.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .icon {
-        color: var(--primary-foreground-color);
-        opacity: 0.35;
+        display: none;
     }
 
     .label {
         flex: none;
         position: relative;
         max-width: 100%;
-        max-height: 2.4em;
-        padding: 0 0.5rem;
-        font-size: 0.8rem;
-        font-weight: 500;
+        padding: 0;
+        font-size: 0.9rem;
+        font-weight: 400;
         letter-spacing: 0.01rem;
         text-align: center;
         white-space: nowrap;
         text-overflow: ellipsis;
         color: var(--primary-foreground-color);
-        opacity: 0;
+        opacity: 0.75;
         overflow: hidden;
     }
 }
 
 @media only screen and (max-width: @minimum) {
+    // Mobile bottom tab bar: revert to the original icon + label layout.
     .nav-tab-button-container {
-        .label {
-            opacity: 0.6;
-        }
+        flex-direction: column;
+        justify-content: center;
+        border-radius: 0.75rem;
 
         &:global(.selected) {
-            .label {
+            .icon {
                 opacity: 1;
             }
+
+            .icon, .label {
+                color: var(--primary-accent-color);
+                font-weight: 500;
+            }
+        }
+
+        .icon, .logo {
+            display: block;
+            flex: none;
+            width: 2.2rem;
+            height: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .icon {
+            color: var(--primary-foreground-color);
+            opacity: 0.35;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.6;
         }
     }
 }
