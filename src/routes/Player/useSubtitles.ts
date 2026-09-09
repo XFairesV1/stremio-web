@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CONSTANTS, languages, onFileDrop, onShortcut, useToast } from 'stremio/common';
+import { snapSubtitleDelay, SUBTITLES_DELAY_STEP_MS } from './subtitleDelay';
 
 const withFallbackLabels = (tracks?: SubtitleTrack[] | null): SubtitleTrack[] => {
     if (!Array.isArray(tracks)) {
@@ -282,11 +283,13 @@ const useSubtitles = ({
     }, [streamStateChanged, video]);
 
     const increaseDelay = useCallback(() => {
-        changeDelay((video.state.extraSubtitlesDelay ?? 0) + 250);
+        const delay = (video.state.extraSubtitlesDelay ?? 0) + SUBTITLES_DELAY_STEP_MS;
+        changeDelay(snapSubtitleDelay(delay, 1));
     }, [changeDelay, video.state.extraSubtitlesDelay]);
 
     const decreaseDelay = useCallback(() => {
-        changeDelay((video.state.extraSubtitlesDelay ?? 0) - 250);
+        const delay = (video.state.extraSubtitlesDelay ?? 0) - SUBTITLES_DELAY_STEP_MS;
+        changeDelay(snapSubtitleDelay(delay, -1));
     }, [changeDelay, video.state.extraSubtitlesDelay]);
 
     const changeSize = useCallback((size: number) => {
@@ -391,6 +394,12 @@ const useSubtitles = ({
             video.setSubtitlesTrack(trackToApply.track.id)
             :
             video.setExtraSubtitlesTrack(trackToApply.track.id);
+
+        const delay = player.streamState?.subtitleDelay;
+        // Selecting an external track resets its delay in stremio-video.
+        if (trackToApply.source === 'external' && typeof delay === 'number') {
+            video.setSubtitlesDelay(delay);
+        }
         appliedTrack.current = {
             id: trackToApply.track.id,
             source: trackToApply.source,
@@ -560,6 +569,7 @@ const useSubtitles = ({
         extraSubtitlesOffset: video.state.extraSubtitlesOffset,
         extraSubtitlesDelay: video.state.extraSubtitlesDelay,
         extraSubtitlesSize: video.state.extraSubtitlesSize,
+        assSubtitlesStylingActive: video.state.assSubtitlesStylingActive,
         onSubtitlesTrackSelected: selectEmbeddedTrack,
         onExtraSubtitlesTrackSelected: selectExtraTrack,
         onSubtitlesOffsetChanged: changeOffset,
@@ -579,6 +589,7 @@ const useSubtitles = ({
         video.state.extraSubtitlesOffset,
         video.state.extraSubtitlesSize,
         video.state.extraSubtitlesTracks,
+        video.state.assSubtitlesStylingActive,
         video.state.selectedExtraSubtitlesTrackId,
         video.state.selectedSubtitlesTrackId,
         video.state.subtitlesOffset,

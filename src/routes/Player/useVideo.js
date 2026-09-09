@@ -21,6 +21,7 @@ const useVideo = () => {
         volume: null,
         muted: null,
         playbackSpeed: null,
+        videoScale: null,
         videoParams: null,
         hdrInfo: null,
         audioTracks: [],
@@ -40,6 +41,7 @@ const useVideo = () => {
         extraSubtitlesTextColor: null,
         extraSubtitlesBackgroundColor: null,
         extraSubtitlesOutlineColor: null,
+        assSubtitlesStylingActive: false,
         fullscreen: null,
     });
 

@@ -321,8 +321,16 @@
                     margin-bottom: 1.5rem;
                 }
 
+                .board-row-poster, .board-row-square, .continue-watching-row, .board-row-landscape {
+                    .meta-item {
+                        &:not(:empty) {
+                            display: block;
+                        }
+                    }
+                }
+
                 .board-row-poster, .board-row-square, .continue-watching-row {
-                    .meta-item, .meta-item-placeholder {
+                    .meta-item-placeholder {
                         &:nth-child(n+4) {
                             display: none;
                         }
@@ -330,7 +338,7 @@
                 }
 
                 .board-row-landscape {
-                    .meta-item, .meta-item-placeholder {
+                    .meta-item-placeholder {
                         &:nth-child(n+3) {
                             display: none;
                         }

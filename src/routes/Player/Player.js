@@ -30,7 +30,7 @@ const { default: SideDrawer } = require('./SideDrawer');
 const usePlayer = require('./usePlayer');
 const { default: usePlayOnDevice } = require('./usePlayOnDevice');
 const { default: useKeyboardSeek } = require('./useKeyboardSeek');
-const useStatistics = require('./useStatistics');
+const { default: useStatistics } = require('./useStatistics');
 const useVideo = require('./useVideo');
 const { default: useSubtitles } = require('./useSubtitles');
 const styles = require('./styles');
@@ -65,7 +65,7 @@ const Player = () => {
         return queryParams.has('forceTranscoding');
     }, [queryParams]);
     const profile = useProfile();
-    const [player, videoParamsChanged, streamStateChanged, subtitlePreferenceChanged, timeChanged, seek, pausedChanged, ended, nextVideo] = usePlayer(urlParams);
+    const [player, videoParamsChanged, streamStateChanged, subtitlePreferenceChanged, videoScaleChanged, timeChanged, seek, pausedChanged, ended, nextVideo] = usePlayer(urlParams);
     const [settings] = useSettings();
     const streamingServer = useStreamingServer();
     const statistics = useStatistics(player, streamingServer);
@@ -178,6 +178,8 @@ const Player = () => {
     const nextVideoPopupDismissed = React.useRef(false);
     const defaultAudioTrackSelected = React.useRef(false);
     const playingOnExternalDevice = React.useRef(false);
+    const requestedVideoScale = React.useRef(null);
+    const persistedVideoScale = React.useRef({ stream: null, scale: null });
     const [error, setError] = React.useState(null);
 
     const VIDEO_SCALES = ['contain', 'cover', 'fill'];
@@ -333,8 +335,14 @@ const Player = () => {
         const currentScale = video.state.videoScale || 'contain';
         const currentIndex = VIDEO_SCALES.indexOf(currentScale);
         const nextScale = VIDEO_SCALES[(currentIndex + 1) % VIDEO_SCALES.length];
+        requestedVideoScale.current = nextScale;
+        persistedVideoScale.current = { stream: video.state.stream, scale: nextScale };
         video.setVideoScale(nextScale);
-    }, [video.state.videoScale]);
+        if (player.videoScale !== undefined) {
+            videoScaleChanged(nextScale);
+        }
+        streamStateChanged({ videoScale: nextScale });
+    }, [player.videoScale, video.state.stream, video.state.videoScale, streamStateChanged, videoScaleChanged]);
 
     const onAudioTrackSelected = React.useCallback((id) => {
         video.setAudioTrack(id);
@@ -578,6 +586,36 @@ const Player = () => {
     }, [video.state.stream]);
 
     React.useEffect(() => {
+        if (requestedVideoScale.current === player.videoScale) {
+            requestedVideoScale.current = null;
+        }
+        if (player.selected === null) {
+            requestedVideoScale.current = null;
+            persistedVideoScale.current = { stream: null, scale: null };
+            return;
+        }
+        if (!video.state.manifest?.props.includes('videoScale') || video.state.stream === null) {
+            return;
+        }
+        if (persistedVideoScale.current.stream !== video.state.stream) {
+            persistedVideoScale.current = { stream: video.state.stream, scale: null };
+        }
+
+        const sessionScale = requestedVideoScale.current ?? player.videoScale;
+        const scale = sessionScale ?? player.streamState?.videoScale ?? 'contain';
+
+        if (video.state.videoScale !== scale) {
+            video.setVideoScale(scale);
+        }
+        if (sessionScale &&
+            player.streamState?.videoScale !== sessionScale &&
+            persistedVideoScale.current.scale !== sessionScale) {
+            persistedVideoScale.current.scale = sessionScale;
+            streamStateChanged({ videoScale: sessionScale });
+        }
+    }, [player.selected, player.streamState?.videoScale, player.videoScale, video.state.manifest, video.state.stream, video.state.videoScale, streamStateChanged]);
+
+    React.useEffect(() => {
         if (!Array.isArray(video.state.audioTracks) || video.state.audioTracks.length === 0) {
             closeAudioMenu();
         }
@@ -789,8 +827,14 @@ const Player = () => {
 
     onShortcut('exit', () => {
         closeMenus();
-        !settings.escExitFullscreen && navigate(-1);
-    }, [settings.escExitFullscreen]);
+        // When escExitFullscreen is enabled, FullscreenProvider handles the first
+        // Escape press by leaving fullscreen. Only skip navigating back in that case,
+        // otherwise Escape would never exit the player in windowed mode.
+        if (settings.escExitFullscreen && fullscreen) {
+            return;
+        }
+        navigate(-1);
+    }, [settings.escExitFullscreen, fullscreen]);
 
     React.useLayoutEffect(() => {
         if (!routeFocused) {
@@ -1037,7 +1081,7 @@ const Player = () => {
                 metaItem={player.metaItem}
                 nextVideo={player.nextVideo}
                 stream={player.selected !== null ? player.selected.stream : null}
-                statistics={statistics}
+                statisticsAvailable={statisticsMenuAvailable}
                 onPlayRequested={onPlayRequested}
                 onPauseRequested={onPauseRequested}
                 onNextVideoRequested={onNextVideoRequested}
@@ -1063,7 +1107,7 @@ const Player = () => {
             <Indicator
                 className={classnames(styles['layer'], styles['indicator-layer'])}
                 videoState={video.state}
-                disabled={subtitlesMenuOpen}
+                disabled={subtitlesMenuOpen || speedMenuOpen}
             />
             {
                 nextVideoPopupOpen ?
